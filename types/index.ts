@@ -37,6 +37,8 @@ export interface MinuteTrackerEntry {
     date: string;
     members: string[];
     tasks: { [memberId: string]: string[] };
+    priority: any;//instead of any here it can use 'never'
+    estimatedMinutes: any;
     userId: string;
     createdAt: Date;
 }
