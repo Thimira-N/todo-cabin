@@ -126,7 +126,7 @@ export default function Sidebar() {
 
                     {/* Enhanced Navigation */}
                     <nav className="flex-1 p-4 space-y-3">
-                        {navigation.map((item, index) => {
+                        {navigation.map((item) => {
                             const isActive = pathname === item.href;
                             return (
                                 <div key={item.name} className="relative group">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback  } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -23,26 +23,27 @@ const Registry = () => {
     const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [isAddingMember, setIsAddingMember] = useState(false);
 
+
+    const loadMembers = useCallback(async (): Promise<void> => {
+        if (user) {
+            const userMembers = memberStorage.getAll(user.id);
+            setMembers(userMembers);
+        }
+    }, [user]);
+
+    const loadRegistryEntries = useCallback(async (): Promise<void> => {
+        if (user) {
+            const entries = registryStorage.getAll(user.id);
+            setRegistryEntries(entries);
+        }
+    }, [user]);
+
     useEffect(() => {
         if (user) {
             loadMembers();
             loadRegistryEntries();
         }
-    }, [user]);
-
-    const loadMembers = () => {
-        if (user) {
-            const userMembers = memberStorage.getAll(user.id);
-            setMembers(userMembers);
-        }
-    };
-
-    const loadRegistryEntries = () => {
-        if (user) {
-            const entries = registryStorage.getAll(user.id);
-            setRegistryEntries(entries);
-        }
-    };
+    }, [user, loadMembers, loadRegistryEntries]);
 
     const handleAddMember = async (e: React.FormEvent) => {
         e.preventDefault();
