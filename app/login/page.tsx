@@ -12,12 +12,12 @@ export default function LoginPage() {
                         <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                             <Users className="h-8 w-8 text-white" />
                         </div>
-                        {/*<CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">*/}
-                        {/*    Welcome Back*/}
-                        {/*</CardTitle>*/}
                         <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            දැම්ම මොකුත් කරන්න යන්න එපා හරකෙක් වගේ. ඉවර වෙනකන් පොඩ්ඩක් හිටපන් ඉවසගෙන!
+                            Welcome Back
                         </CardTitle>
+                        {/*<CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">*/}
+                        {/*    දැම්ම මොකුත් කරන්න යන්න එපා හරකෙක් වගේ. ඉවර වෙනකන් පොඩ්ඩක් හිටපන් ඉවසගෙන!*/}
+                        {/*</CardTitle>*/}
                         <CardDescription className="text-gray-600 dark:text-gray-300">
                             Sign in to your team account
                         </CardDescription>

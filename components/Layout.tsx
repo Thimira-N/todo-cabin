@@ -15,7 +15,7 @@ export default function Layout({ children, className }: LayoutProps) {
             <Sidebar />
             <main
                 className={cn(
-                    'flex-1 ml-64 p-8 transition-all duration-300',
+                    'flex-1 p-8 transition-all duration-300',
                     className
                 )}
             >
