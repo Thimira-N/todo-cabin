@@ -66,7 +66,7 @@ export function Header({ isMobile, sidebarCollapsed, onToggleCollapse }: HeaderP
               transition-all duration-300
               ${scrolled ? 'text-primary/80' : 'text-primary'}
             `}>
-              'Tidy tasks. Cozy logs. Teamwork that sticks.'
+              {'Tidy tasks. Cozy logs. Teamwork that sticks.'}
             </span>
                     </div>
                 </div>
