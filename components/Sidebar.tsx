@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
     Moon,
     Sun,
     Users,
-    ChevronLeft,
+    // ChevronLeft,
     Sparkles,
     Activity,
     X,
@@ -45,39 +45,28 @@ const navigation = [
     },
 ];
 
-export default function Sidebar() {
-    const [collapsed, setCollapsed] = useState(false);
-    const [isMobileOpen, setIsMobileOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
+interface SidebarProps {
+    collapsed: boolean;
+    isMobile: boolean;
+    isMobileOpen: boolean;
+    setIsMobileOpen: (value: boolean) => void;
+}
 
+export default function Sidebar({
+                                    collapsed,
+                                    isMobile,
+                                    isMobileOpen,
+                                    setIsMobileOpen
+                                }: SidebarProps) {
     const router = useRouter();
     const pathname = usePathname();
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
 
-    // Handle screen size changes
-    useEffect(() => {
-        const handleResize = () => {
-            const width = window.innerWidth;
-            const newIsMobile = width < 768;
-            setIsMobile(newIsMobile);
-
-            // Auto-collapse on mobile
-            if (newIsMobile) {
-                setCollapsed(true);
-                setIsMobileOpen(false);
-            }
-        };
-
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
     // Close mobile menu when route changes
     useEffect(() => {
         setIsMobileOpen(false);
-    }, [pathname]);
+    }, [pathname, setIsMobileOpen]);
 
     // Handle escape key to close mobile menu
     useEffect(() => {
@@ -91,19 +80,11 @@ export default function Sidebar() {
             document.addEventListener('keydown', handleEscape);
             return () => document.removeEventListener('keydown', handleEscape);
         }
-    }, [isMobileOpen]);
+    }, [isMobileOpen, setIsMobileOpen]);
 
     const handleLogout = () => {
         logout();
         router.push('/login');
-    };
-
-    const handleToggleCollapse = () => {
-        if (isMobile) {
-            setIsMobileOpen(!isMobileOpen);
-        } else {
-            setCollapsed(!collapsed);
-        }
     };
 
     const shouldShowContent = isMobile ? isMobileOpen : !collapsed;
@@ -145,11 +126,11 @@ export default function Sidebar() {
                     'dark:from-gray-900 dark:via-slate-900 dark:to-gray-800',
                     'border-r border-gray-200/60 dark:border-gray-700/60',
                     'shadow-2xl backdrop-blur-xl',
-                    'overflow-hidden', // Hide horizontal scrollbar
+                    'overflow-hidden',
                     sidebarWidth,
-                    // Mobile positioning
                     isMobile && !isMobileOpen && '-translate-x-full',
-                    isMobile && isMobileOpen && 'translate-x-0'
+                    isMobile && isMobileOpen && 'translate-x-0',
+                    'pt-14'
                 )}
             >
                 {/* Gradient overlay */}
@@ -176,26 +157,6 @@ export default function Sidebar() {
                                     </div>
                                 </div>
                             </div>
-                        )}
-
-                        {/* Toggle Button - Only show on desktop */}
-                        {!isMobile && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleToggleCollapse}
-                                className={cn(
-                                    'h-5 w-5 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 flex-shrink-0',
-                                    collapsed && 'mx-auto'
-                                )}
-                                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                            >
-                                {collapsed ? (
-                                    <Menu className="h-5 w-5" />
-                                ) : (
-                                    <ChevronLeft className="h-5 w-5" />
-                                )}
-                            </Button>
                         )}
 
                         {/* Mobile Close Button */}
