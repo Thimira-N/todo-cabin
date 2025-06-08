@@ -5,7 +5,7 @@ import { ChevronLeft, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface HeaderProps {
-    // isMobile: boolean;
+    isMobile: boolean;
     sidebarCollapsed: boolean;
     onToggleCollapse: () => void;
 }
