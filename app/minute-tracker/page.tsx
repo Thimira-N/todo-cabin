@@ -330,7 +330,7 @@ const MinuteTracker = () => {
     };
 
     return (
-        <Layout>
+        <Layout className="bg-gradient-to-br from-transparent via-green-50 to-transparent dark:from-gray-900 dark:via-slate-900 dark:to-indigo-900">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Enhanced Header with Stats */}
                 <div className="space-y-6">

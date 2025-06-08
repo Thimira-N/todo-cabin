@@ -134,8 +134,8 @@ const Registry = () => {
     const stats = getAttendanceStats();
 
     return (
-        <Layout>
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-900">
+        <Layout className="bg-gradient-to-br from-transparent via-blue-100 to-transparent dark:from-gray-900 dark:via-slate-900 dark:to-indigo-900">
+            <div className="min-h-screen">
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
                     {/*header*/}
                     <div className="relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
@@ -250,7 +250,7 @@ const Registry = () => {
                         </Card>
                     </div>
 
-                    {/* Enhanced Date Selector */}
+                    {/*Date Selector */}
                     <Card className="border-0 shadow-lg sm:shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-gray-800">
                         <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 dark:from-gray-700 dark:to-gray-600 border-b border-gray-200 dark:border-gray-600 p-4 sm:p-6">
                             <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
@@ -283,7 +283,7 @@ const Registry = () => {
                         </CardContent>
                     </Card>
 
-                    {/* Enhanced Members List */}
+                    {/*Members List */}
                     <div className="space-y-4 sm:space-y-6">
                         {members.length === 0 ? (
                             <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-gray-800">
@@ -323,8 +323,10 @@ const Registry = () => {
                                     return (
                                         <Card key={member.id} className="group border-0 shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-gray-800 hover:scale-[1.01] sm:hover:scale-[1.02]">
                                             <CardContent className="p-4 sm:p-6 lg:p-8">
-                                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+                                                <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
+                                                    {/* Member info section (left side) */}
                                                     <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 min-w-0 flex-1">
+                                                        {/* Avatar and name section remains the same */}
                                                         <div className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-r ${gradientClass} rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-105 sm:group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
                                                             <span className="text-white font-bold text-lg sm:text-xl lg:text-2xl">
                                                                 {member.name.charAt(0).toUpperCase()}
@@ -356,7 +358,8 @@ const Registry = () => {
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 sm:gap-3 w-full xs:w-auto">
+                                                    {/* Buttons section (right-aligned) */}
+                                                    <div className="flex flex-row items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto ml-auto">
                                                         <Button
                                                             onClick={() => handleMarkIn(member.id)}
                                                             size="sm"

@@ -161,7 +161,7 @@ const ToDo = () => {
     const getTotalCount = () => todos.length;
 
     return (
-        <Layout>
+        <Layout className="bg-gradient-to-br from-transparent via-purple-100 to-transparent dark:from-gray-900 dark:via-slate-900 dark:to-indigo-900">
             <div className="max-w-6xl mx-auto space-y-8">
                 {/* Header */}
                 <div className="flex items-center justify-between">
