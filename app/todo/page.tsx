@@ -109,7 +109,7 @@ const ToDo = () => {
                 title: newTodo.title.trim(),
                 description: newTodo.description.trim(),
                 priority: newTodo.priority,
-                dueDate: newTodo.dueDate || undefined,
+                dueDate: newTodo.dueDate ? new Date(newTodo.dueDate).toISOString() : undefined,
                 completed: false,
                 userId: user.id,
             });
@@ -132,7 +132,16 @@ const ToDo = () => {
         if (!editingTodo) return;
 
         try {
-            await todoService.update(editingTodo);
+            const updatedTodo = {
+                ...editingTodo,
+                dueDate: editingTodo.dueDate
+                    ? typeof editingTodo.dueDate === 'string'
+                        ? editingTodo.dueDate
+                        : new Date(editingTodo.dueDate).toISOString()
+                    : undefined
+            };
+
+            await todoService.update(updatedTodo);
             setEditingTodo(null);
             await loadTodos();
         } catch (error) {
@@ -444,9 +453,12 @@ const ToDo = () => {
                                                         {todo.dueDate && (
                                                             <Badge variant="outline">
                                                                 <Calendar className="h-3 w-3 mr-1" />
-                                                                {typeof todo.dueDate === 'string'
-                                                                    ? format(parseISO(todo.dueDate), 'MMM d, yyyy')
-                                                                    : format(todo.dueDate, 'MMM d, yyyy')}
+                                                                {format(
+                                                                    typeof todo.dueDate === 'string'
+                                                                        ? parseISO(todo.dueDate)
+                                                                        : todo.dueDate,
+                                                                    'MMM d, yyyy'
+                                                                )}
                                                             </Badge>
                                                         )}
                                                     </div>
