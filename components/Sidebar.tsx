@@ -5,21 +5,22 @@ import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
+// import { useTheme } from '@/contexts/ThemeContext';
 import {
     BookOpen,
     CheckSquare,
     Clock,
-    LogOut,
+    // LogOut,
     Menu,
-    Moon,
-    Sun,
+    // Moon,
+    // Sun,
     Users,
     // ChevronLeft,
     Sparkles,
     Activity,
     X,
 } from 'lucide-react';
+import {NameTag} from "@/components/nametag";
 
 const navigation = [
     {
@@ -60,8 +61,9 @@ export default function Sidebar({
                                 }: SidebarProps) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout } = useAuth();
-    const { theme, toggleTheme } = useTheme();
+    // const { user, logout } = useAuth();
+    // const { theme, toggleTheme } = useTheme();
+    const { user } = useAuth();
 
     // Close mobile menu when route changes
     useEffect(() => {
@@ -82,10 +84,10 @@ export default function Sidebar({
         }
     }, [isMobileOpen, setIsMobileOpen]);
 
-    const handleLogout = () => {
-        logout();
-        router.push('/login');
-    };
+    // const handleLogout = () => {
+    //     logout();
+    //     router.push('/login');
+    // };
 
     const shouldShowContent = isMobile ? isMobileOpen : !collapsed;
     const sidebarWidth : 'w-80'|'w-24'|'w-72' = isMobile ? 'w-80' : (collapsed ? 'w-24' : 'w-72');
@@ -252,70 +254,70 @@ export default function Sidebar({
 
                     {/* Footer */}
                     <div className="p-3 sm:p-4 border-t border-gray-200/60 dark:border-gray-700/60 space-y-2 sm:space-y-3 overflow-hidden">
-                        {/* Theme Toggle */}
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                'w-full justify-start gap-3 sm:gap-4 h-10 sm:h-12 transition-all duration-300 rounded-2xl relative overflow-hidden',
-                                'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]',
-                                collapsed && !shouldShowContent && 'px-2 sm:px-3 justify-center'
-                            )}
-                            onClick={toggleTheme}
-                            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-yellow-100/0 to-blue-100/0 hover:from-yellow-100/30 hover:to-blue-100/30 dark:hover:from-yellow-900/20 dark:hover:to-blue-900/20 transition-all duration-300" />
+                        {/*/!* Theme Toggle *!/*/}
+                        {/*<Button*/}
+                        {/*    variant="ghost"*/}
+                        {/*    className={cn(*/}
+                        {/*        'w-full justify-start gap-3 sm:gap-4 h-10 sm:h-12 transition-all duration-300 rounded-2xl relative overflow-hidden',*/}
+                        {/*        'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]',*/}
+                        {/*        collapsed && !shouldShowContent && 'px-2 sm:px-3 justify-center'*/}
+                        {/*    )}*/}
+                        {/*    onClick={toggleTheme}*/}
+                        {/*    aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}*/}
+                        {/*>*/}
+                        {/*    <div className="absolute inset-0 bg-gradient-to-r from-yellow-100/0 to-blue-100/0 hover:from-yellow-100/30 hover:to-blue-100/30 dark:hover:from-yellow-900/20 dark:hover:to-blue-900/20 transition-all duration-300" />*/}
 
-                            <div className="relative flex items-center gap-3 sm:gap-4 w-full min-w-0">
-                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-blue-500 dark:to-purple-600 flex items-center justify-center shadow-lg transition-all duration-300 flex-shrink-0">
-                                    {theme === 'light' ? (
-                                        <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                    ) : (
-                                        <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                    )}
-                                </div>
-                                {shouldShowContent && (
-                                    <div className="flex-1 text-left min-w-0">
-                                        <div className="font-semibold text-sm text-gray-700 dark:text-gray-300 truncate">
-                                            {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                                            Switch theme
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </Button>
+                        {/*    <div className="relative flex items-center gap-3 sm:gap-4 w-full min-w-0">*/}
+                        {/*        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-blue-500 dark:to-purple-600 flex items-center justify-center shadow-lg transition-all duration-300 flex-shrink-0">*/}
+                        {/*            {theme === 'light' ? (*/}
+                        {/*                <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />*/}
+                        {/*            ) : (*/}
+                        {/*                <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-white" />*/}
+                        {/*            )}*/}
+                        {/*        </div>*/}
+                        {/*        {shouldShowContent && (*/}
+                        {/*            <div className="flex-1 text-left min-w-0">*/}
+                        {/*                <div className="font-semibold text-sm text-gray-700 dark:text-gray-300 truncate">*/}
+                        {/*                    {theme === 'light' ? 'Dark Mode' : 'Light Mode'}*/}
+                        {/*                </div>*/}
+                        {/*                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">*/}
+                        {/*                    Switch theme*/}
+                        {/*                </div>*/}
+                        {/*            </div>*/}
+                        {/*        )}*/}
+                        {/*    </div>*/}
+                        {/*</Button>*/}
 
-                        {/* Logout Button */}
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                'w-full justify-start gap-3 sm:gap-4 h-10 sm:h-12 transition-all duration-300 rounded-2xl relative overflow-hidden',
-                                'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]',
-                                'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300',
-                                collapsed && !shouldShowContent && 'px-2 sm:px-3 justify-center'
-                            )}
-                            onClick={handleLogout}
-                            aria-label="Sign out"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-red-50/0 to-pink-50/0 hover:from-red-50/50 hover:to-pink-50/50 dark:hover:from-red-900/20 dark:hover:to-pink-900/20 transition-all duration-300" />
+                        {/*/!* Logout Button *!/*/}
+                        {/*<Button*/}
+                        {/*    variant="ghost"*/}
+                        {/*    className={cn(*/}
+                        {/*        'w-full justify-start gap-3 sm:gap-4 h-10 sm:h-12 transition-all duration-300 rounded-2xl relative overflow-hidden',*/}
+                        {/*        'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]',*/}
+                        {/*        'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300',*/}
+                        {/*        collapsed && !shouldShowContent && 'px-2 sm:px-3 justify-center'*/}
+                        {/*    )}*/}
+                        {/*    onClick={handleLogout}*/}
+                        {/*    aria-label="Sign out"*/}
+                        {/*>*/}
+                        {/*    <div className="absolute inset-0 bg-gradient-to-r from-red-50/0 to-pink-50/0 hover:from-red-50/50 hover:to-pink-50/50 dark:hover:from-red-900/20 dark:hover:to-pink-900/20 transition-all duration-300" />*/}
 
-                            <div className="relative flex items-center gap-3 sm:gap-4 w-full min-w-0">
-                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 flex items-center justify-center shadow-lg transition-all duration-300 flex-shrink-0">
-                                    <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                </div>
-                                {shouldShowContent && (
-                                    <div className="flex-1 text-left min-w-0">
-                                        <div className="font-semibold text-sm truncate">
-                                            Sign Out
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                                            End session
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </Button>
+                        {/*    <div className="relative flex items-center gap-3 sm:gap-4 w-full min-w-0">*/}
+                        {/*        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 flex items-center justify-center shadow-lg transition-all duration-300 flex-shrink-0">*/}
+                        {/*            <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-white" />*/}
+                        {/*        </div>*/}
+                        {/*        {shouldShowContent && (*/}
+                        {/*            <div className="flex-1 text-left min-w-0">*/}
+                        {/*                <div className="font-semibold text-sm truncate">*/}
+                        {/*                    Sign Out*/}
+                        {/*                </div>*/}
+                        {/*                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">*/}
+                        {/*                    End session*/}
+                        {/*                </div>*/}
+                        {/*            </div>*/}
+                        {/*        )}*/}
+                        {/*    </div>*/}
+                        {/*</Button>*/}
 
                         {/* User Info */}
                         {shouldShowContent && user && (
@@ -338,6 +340,9 @@ export default function Sidebar({
                                 </div>
                             </div>
                         )}
+                    </div>
+                    <div className="p-3 sm:p-4 border-t border-gray-200/60 dark:border-gray-700/60 space-y-2 sm:space-y-3 overflow-hidden">
+                        <NameTag />
                     </div>
                 </div>
             </div>
