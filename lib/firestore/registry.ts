@@ -75,7 +75,7 @@ export const registryService = {
     },
 
     getEntriesForDate: async (date: string, userId: string): Promise<RegistryEntry[]> => {
-        const cacheKey = `${userId}-${date}`;
+        // const cacheKey = `${userId}-${date}`;
 
         // Check cache first
         const cachedEntries = Array.from(cache.values()).filter(

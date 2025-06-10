@@ -35,7 +35,7 @@ export const firestore = {
     getWhere: async <T>(
         collectionName: string,
         field: string | string[],
-        value: any | any[]
+        value: string | string[]
     ): Promise<T[]> => {
         let q = query(collection(db, collectionName));
 

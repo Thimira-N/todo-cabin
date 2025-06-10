@@ -449,8 +449,8 @@ const Registry = () => {
                                     // Determine button states
                                     const isMarkedIn = !entriesLoading && !!entry?.markIn;
                                     const isMarkedOut = !entriesLoading && !!entry?.markOut;
-                                    const canMarkIn = !entriesLoading && !isMarkedIn && !isMarkedOut && isCurrentDay;
-                                    const canMarkOut = !entriesLoading && isMarkedIn && !isMarkedOut && isCurrentDay;
+                                    // const canMarkIn = !entriesLoading && !isMarkedIn && !isMarkedOut && isCurrentDay;
+                                    // const canMarkOut = !entriesLoading && isMarkedIn && !isMarkedOut && isCurrentDay;
 
                                     return (
                                         <Card key={member.id} className="group border-0 shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-gray-800 hover:scale-[1.01] sm:hover:scale-[1.02]">
