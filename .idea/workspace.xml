@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b3f2671d-c9d5-4708-8df4-31a4ff3451a5" name="Changes" comment="" />
+    <list default="true" id="b3f2671d-c9d5-4708-8df4-31a4ff3451a5" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/firebase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/firebase.ts" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -66,7 +69,7 @@
       <workItem from="1749297427668" duration="12072000" />
       <workItem from="1749385627662" duration="16925000" />
       <workItem from="1749450261341" duration="29614000" />
-      <workItem from="1749531527931" duration="24755000" />
+      <workItem from="1749531527931" duration="25118000" />
     </task>
     <servers />
   </component>
