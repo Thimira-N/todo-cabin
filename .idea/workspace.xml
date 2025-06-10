@@ -4,7 +4,24 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b3f2671d-c9d5-4708-8df4-31a4ff3451a5" name="Changes" comment="" />
+    <list default="true" id="b3f2671d-c9d5-4708-8df4-31a4ff3451a5" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/lib/auth.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/db.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/firebase.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/firestore/members.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/firestore/minuteTracker.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/firestore/registry.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/firestore/todos.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/minute-tracker/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/minute-tracker/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/registry/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/registry/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/todo/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/todo/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/contexts/AuthContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/contexts/AuthContext.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/storage.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/storage.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/types/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/types/index.ts" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -64,7 +81,9 @@
       <workItem from="1749222845059" duration="5621000" />
       <workItem from="1749278103364" duration="5031000" />
       <workItem from="1749297427668" duration="12072000" />
-      <workItem from="1749385627662" duration="15444000" />
+      <workItem from="1749385627662" duration="16925000" />
+      <workItem from="1749450261341" duration="29614000" />
+      <workItem from="1749531527931" duration="21679000" />
     </task>
     <servers />
   </component>

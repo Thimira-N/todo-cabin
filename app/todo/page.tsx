@@ -12,10 +12,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { todoStorage } from '@/lib/storage';
 import { TodoItem } from '@/types';
 import { Plus, Calendar, Filter, Check, Trash2, Edit3, CheckSquare } from 'lucide-react';
 import { format, isAfter, isBefore, isToday, parseISO } from 'date-fns';
+import { todoService } from '@/lib/firestore/todos';
 
 const ToDo = () => {
     const { user } = useAuth();
@@ -26,6 +26,7 @@ const ToDo = () => {
     const [filterPeriod, setFilterPeriod] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterPriority, setFilterPriority] = useState<string>('all');
+    const [loading, setLoading] = useState(true);
 
     const [newTodo, setNewTodo] = useState({
         title: '',
@@ -35,7 +36,7 @@ const ToDo = () => {
     });
 
     useEffect(() => {
-        if (user) {
+        if (user?.id) {
             loadTodos();
         }
     }, [user]);
@@ -44,10 +45,16 @@ const ToDo = () => {
         applyFilters();
     }, [todos, filterPeriod, filterStatus, filterPriority]);
 
-    const loadTodos = () => {
-        if (user) {
-            const userTodos = todoStorage.getAll(user.id);
+    const loadTodos = async () => {
+        if (!user?.id) return;
+
+        try {
+            const userTodos = await todoService.getAll(user.id);
             setTodos(userTodos);
+        } catch (error) {
+            console.error('Failed to load todos:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -95,10 +102,10 @@ const ToDo = () => {
 
     const handleAddTodo = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user || !newTodo.title.trim()) return;
+        if (!user?.id || !newTodo.title.trim()) return;
 
         try {
-            todoStorage.add({
+            await todoService.add({
                 title: newTodo.title.trim(),
                 description: newTodo.description.trim(),
                 priority: newTodo.priority,
@@ -114,7 +121,7 @@ const ToDo = () => {
                 dueDate: '',
             });
             setIsAddingTodo(false);
-            loadTodos();
+            await loadTodos();
         } catch (error) {
             console.error('Failed to add todo:', error);
         }
@@ -125,23 +132,31 @@ const ToDo = () => {
         if (!editingTodo) return;
 
         try {
-            todoStorage.update(editingTodo);
+            await todoService.update(editingTodo);
             setEditingTodo(null);
-            loadTodos();
+            await loadTodos();
         } catch (error) {
             console.error('Failed to update todo:', error);
         }
     };
 
-    const handleToggleComplete = (todo: TodoItem) => {
-        const updatedTodo = { ...todo, completed: !todo.completed };
-        todoStorage.update(updatedTodo);
-        loadTodos();
+    const handleToggleComplete = async (todo: TodoItem) => {
+        try {
+            const updatedTodo = { ...todo, completed: !todo.completed };
+            await todoService.update(updatedTodo);
+            await loadTodos();
+        } catch (error) {
+            console.error('Failed to toggle todo:', error);
+        }
     };
 
-    const handleDeleteTodo = (todoId: string) => {
-        todoStorage.delete(todoId);
-        loadTodos();
+    const handleDeleteTodo = async (todoId: string) => {
+        try {
+            await todoService.delete(todoId);
+            await loadTodos();
+        } catch (error) {
+            console.error('Failed to delete todo:', error);
+        }
     };
 
     const getPriorityColor = (priority: string) => {
@@ -159,6 +174,16 @@ const ToDo = () => {
 
     const getCompletedCount = () => todos.filter(todo => todo.completed).length;
     const getTotalCount = () => todos.length;
+
+    if (loading) {
+        return (
+            <Layout>
+                <div className="flex justify-center items-center min-h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout className="bg-gradient-to-br from-transparent via-purple-100 to-transparent dark:from-gray-900 dark:via-slate-900 dark:to-indigo-900">
@@ -419,7 +444,9 @@ const ToDo = () => {
                                                         {todo.dueDate && (
                                                             <Badge variant="outline">
                                                                 <Calendar className="h-3 w-3 mr-1" />
-                                                                {format(parseISO(todo.dueDate), 'MMM d, yyyy')}
+                                                                {typeof todo.dueDate === 'string'
+                                                                    ? format(parseISO(todo.dueDate), 'MMM d, yyyy')
+                                                                    : format(todo.dueDate, 'MMM d, yyyy')}
                                                             </Badge>
                                                         )}
                                                     </div>

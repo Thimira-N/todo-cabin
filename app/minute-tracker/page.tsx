@@ -13,27 +13,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { memberStorage, minuteTrackerStorage } from '@/lib/storage';
-import { Member, MinuteTrackerEntry } from '@/types';
-import {
-    Plus,
-    Calendar,
-    Trash2,
-    Clock,
-    Users,
-    Save,
-    Download,
-    Search,
-    CheckCircle,
-    AlertCircle,
-    BarChart3,
-    CalendarDays,
-    Target,
-    Timer,
-    Copy,
-    TrendingUp
-} from 'lucide-react';
+import { MinuteTrackerEntry, Member } from '@/types';
+import { Plus, Calendar, Trash2, Clock, Users, Save, Download, Search, CheckCircle, AlertCircle, BarChart3, CalendarDays, Target, Timer, Copy, TrendingUp } from 'lucide-react';
 import { format, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import * as XLSX from 'xlsx';
+import { memberService } from '@/lib/firestore/members';
+import { minuteTrackerService } from '@/lib/firestore/minuteTracker';
 
 type FilterPeriod = 'all' | 'today' | 'week' | 'month' | 'custom';
 type ViewMode = 'list' | 'grid' | 'summary';
@@ -43,7 +28,6 @@ const MinuteTracker = () => {
     const [members, setMembers] = useState<Member[]>([]);
     const [trackerEntries, setTrackerEntries] = useState<MinuteTrackerEntry[]>([]);
     const [isCreatingEntry, setIsCreatingEntry] = useState(false);
-    // const [editingEntry, setEditingEntry] = useState<MinuteTrackerEntry | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('all');
     const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
@@ -51,6 +35,7 @@ const MinuteTracker = () => {
     const [selectedMemberFilter, setSelectedMemberFilter] = useState<string>('all');
     const [showCompletedOnly, setShowCompletedOnly] = useState(false);
     const [autoSave, setAutoSave] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     const [newEntry, setNewEntry] = useState({
         date: format(new Date(), 'yyyy-MM-dd'),
@@ -60,39 +45,50 @@ const MinuteTracker = () => {
         estimatedMinutes: 480, // 8 hours default
     });
 
-    // Auto-save functionality
     useEffect(() => {
-        if (!autoSave) return;
-
-        const timer = setTimeout(() => {
-            // Auto-save logic would go here
-        }, 2000);
-
-        return () => clearTimeout(timer);
-    }, [trackerEntries, autoSave]);
-
-    useEffect(() => {
-        if (user) {
-            loadMembers();
-            loadTrackerEntries();
+        if (user?.id) {
+            loadData();
         }
     }, [user]);
 
-    const loadMembers = () => {
-        if (user) {
-            const userMembers = memberStorage.getAll(user.id);
+    const loadData = async () => {
+        try {
+            setLoading(true);
+            await loadMembers();
+            await loadTrackerEntries();
+        } catch (error) {
+            console.error('Failed to load data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadMembers = async () => {
+        if (!user?.id) return;
+        try {
+            const userMembers = await memberService.getAll(user.id);
             setMembers(userMembers);
+        } catch (error) {
+            console.error('Failed to load members:', error);
         }
     };
 
-    const loadTrackerEntries = () => {
-        if (user) {
-            const entries = minuteTrackerStorage.getAll(user.id);
+    const loadTrackerEntries = async () => {
+        if (!user?.id) return;
+        try {
+            const entries = await minuteTrackerService.getAll(user.id);
             setTrackerEntries(entries);
+        } catch (error) {
+            console.error('Failed to load tracker entries:', error);
         }
     };
 
-    // Enhanced filtering logic
+    const getMemberName = (memberId: string): string => {
+        const member = members.find(m => m.id === memberId);
+        return member ? member.name : 'Unknown Member';
+    };
+
+    //filtering logic
     const filteredEntries = useMemo(() => {
         let filtered = trackerEntries;
 
@@ -179,26 +175,31 @@ const MinuteTracker = () => {
 
     const handleCreateEntry = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user || newEntry.selectedMembers.length === 0) return;
+        if (!user?.id || newEntry.selectedMembers.length === 0) return;
 
         try {
             const tasks: { [memberId: string]: string[] } = {};
             newEntry.selectedMembers.forEach(memberId => {
-                // Initialize with template if provided
                 const initialTasks = newEntry.template ? [newEntry.template] : [''];
                 tasks[memberId] = initialTasks;
             });
 
-            minuteTrackerStorage.add({
+            // Create the new entry object with all required fields
+            const entryToAdd = {
                 date: newEntry.date,
                 members: newEntry.selectedMembers,
                 tasks,
-                userId: user.id,
                 priority: newEntry.priority,
-                estimatedMinutes: newEntry.estimatedMinutes,
-                // createdAt: new Date().toISOString(),
-            });
+                estimatedMinutes: newEntry.estimatedMinutes,  // Fixed typo here (was estimatedM)
+                userId: user.id,
+                createdAt: new Date(),  // Add createdAt field
+                id: Date.now().toString()  // Add id field
+            };
 
+            // Actually add the entry to the database
+            await minuteTrackerService.add(entryToAdd);
+
+            // Reset the form
             setNewEntry({
                 date: format(new Date(), 'yyyy-MM-dd'),
                 selectedMembers: [],
@@ -207,7 +208,7 @@ const MinuteTracker = () => {
                 estimatedMinutes: 480,
             });
             setIsCreatingEntry(false);
-            loadTrackerEntries();
+            await loadTrackerEntries();
         } catch (error) {
             console.error('Failed to create tracker entry:', error);
         }
@@ -222,98 +223,145 @@ const MinuteTracker = () => {
         }));
     };
 
-    const handleDeleteEntry = (entryId: string) => {
+    const handleDeleteEntry = async (entryId: string) => {
         if (confirm('Are you sure you want to delete this tracker entry?')) {
-            minuteTrackerStorage.delete(entryId);
-            loadTrackerEntries();
+            try {
+                await minuteTrackerService.delete(entryId);
+                await loadTrackerEntries();
+            } catch (error) {
+                console.error('Failed to delete entry:', error);
+            }
         }
     };
 
-    const handleDuplicateEntry = (entry: MinuteTrackerEntry) => {
-        if (!user) return;
+    const handleDuplicateEntry = async (entry: MinuteTrackerEntry) => {
+        if (!user?.id) return;
 
-        const duplicatedEntry = {
-            ...entry,
-            id: undefined,
-            date: format(new Date(), 'yyyy-MM-dd'),
-            tasks: Object.fromEntries(
-                Object.entries(entry.tasks).map(([memberId]) => [memberId, ['']])
-            ),
-            createdAt: new Date().toISOString(),
-        };
+        try {
+            const duplicatedEntry = {
+                ...entry,
+                id: Date.now().toString(),
+                date: format(new Date(), 'yyyy-MM-dd'),
+                tasks: Object.fromEntries(
+                    Object.entries(entry.tasks).map(([memberId]) => [memberId, ['']]
+                    ),)
+            };
 
-        minuteTrackerStorage.add(duplicatedEntry);
-        loadTrackerEntries();
+            await minuteTrackerService.add(duplicatedEntry);
+            await loadTrackerEntries();
+        } catch (error) {
+            console.error('Failed to duplicate entry:', error);
+        }
     };
 
     const handleExportData = () => {
-        const dataToExport = filteredEntries.map(entry => ({
-            date: entry.date,
-            members: entry.members.map(id => getMemberName(id)),
-            tasks: Object.entries(entry.tasks).map(([memberId, tasks]) => ({
-                member: getMemberName(memberId),
-                tasks: tasks.filter(task => task.trim())
-            })),
-            priority: entry.priority,
-            estimatedMinutes: entry.estimatedMinutes,
-        }));
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
 
-        const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `minute-tracker-${format(new Date(), 'yyyy-MM-dd')}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        // Prepare the data for export
+        const excelData = filteredEntries.flatMap(entry => {
+            const baseData = {
+                'Date': format(new Date(entry.date), 'yyyy-MM-dd'),
+                'Priority': entry.priority,
+                'Estimated Minutes': entry.estimatedMinutes
+            };
+
+            // Flatten tasks for each member
+            return Object.entries(entry.tasks).map(([memberId, tasks]) => {
+                const memberName = getMemberName(memberId);
+                return tasks
+                    .filter(task => task.trim())
+                    .map((task, index) => ({
+                        ...baseData,
+                        'Member': memberName,
+                        'Task Number': index + 1,
+                        'Task Description': task
+                    }));
+            }).flat();
+        });
+
+        // Convert data to worksheet
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Minute Tracker');
+
+        // Generate Excel file and download
+        XLSX.writeFile(workbook, `minute-tracker-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     };
 
-    const handleUpdateTask = (entryId: string, memberId: string, taskIndex: number, value: string) => {
+    const handleUpdateTask = async (entryId: string, memberId: string, taskIndex: number, value: string) => {
+        // Update local state immediately for responsive UI
+        setTrackerEntries(prevEntries =>
+            prevEntries.map(entry => {
+                if (entry.id === entryId) {
+                    const updatedTasks = { ...entry.tasks };
+                    if (!updatedTasks[memberId]) {
+                        updatedTasks[memberId] = [];
+                    }
+                    updatedTasks[memberId][taskIndex] = value;
+                    return { ...entry, tasks: updatedTasks };
+                }
+                return entry;
+            })
+        );
+
+        // Then update the database (only if autoSave is enabled)
+        if (autoSave) {
+            try {
+                const entry = trackerEntries.find(e => e.id === entryId);
+                if (!entry) return;
+
+                const updatedTasks = { ...entry.tasks };
+                if (!updatedTasks[memberId]) {
+                    updatedTasks[memberId] = [];
+                }
+                updatedTasks[memberId][taskIndex] = value;
+
+                const updatedEntry = { ...entry, tasks: updatedTasks };
+                await minuteTrackerService.update(updatedEntry);
+            } catch (error) {
+                console.error('Failed to update task:', error);
+                // Optionally revert the local state if the update fails
+            }
+        }
+    };
+
+    const handleAddTask = async (entryId: string, memberId: string) => {
         const entry = trackerEntries.find(e => e.id === entryId);
         if (!entry) return;
 
-        const updatedTasks = { ...entry.tasks };
-        if (!updatedTasks[memberId]) {
-            updatedTasks[memberId] = [];
-        }
-        updatedTasks[memberId][taskIndex] = value;
+        try {
+            const updatedTasks = { ...entry.tasks };
+            if (!updatedTasks[memberId]) {
+                updatedTasks[memberId] = [];
+            }
+            updatedTasks[memberId].push('');
 
-        const updatedEntry = { ...entry, tasks: updatedTasks };
-        minuteTrackerStorage.update(updatedEntry);
-        loadTrackerEntries();
+            const updatedEntry = { ...entry, tasks: updatedTasks };
+            await minuteTrackerService.update(updatedEntry);
+            await loadTrackerEntries();
+        } catch (error) {
+            console.error('Failed to add task:', error);
+        }
     };
 
-    const handleAddTask = (entryId: string, memberId: string) => {
+    const handleRemoveTask = async (entryId: string, memberId: string, taskIndex: number) => {
         const entry = trackerEntries.find(e => e.id === entryId);
         if (!entry) return;
 
-        const updatedTasks = { ...entry.tasks };
-        if (!updatedTasks[memberId]) {
-            updatedTasks[memberId] = [];
+        try {
+            const updatedTasks = { ...entry.tasks };
+            if (updatedTasks[memberId] && updatedTasks[memberId].length > 1) {
+                updatedTasks[memberId].splice(taskIndex, 1);
+            }
+
+            const updatedEntry = { ...entry, tasks: updatedTasks };
+            await minuteTrackerService.update(updatedEntry);
+            await loadTrackerEntries();
+        } catch (error) {
+            console.error('Failed to remove task:', error);
         }
-        updatedTasks[memberId].push('');
-
-        const updatedEntry = { ...entry, tasks: updatedTasks };
-        minuteTrackerStorage.update(updatedEntry);
-        loadTrackerEntries();
-    };
-
-    const handleRemoveTask = (entryId: string, memberId: string, taskIndex: number) => {
-        const entry = trackerEntries.find(e => e.id === entryId);
-        if (!entry) return;
-
-        const updatedTasks = { ...entry.tasks };
-        if (updatedTasks[memberId] && updatedTasks[memberId].length > 1) {
-            updatedTasks[memberId].splice(taskIndex, 1);
-        }
-
-        const updatedEntry = { ...entry, tasks: updatedTasks };
-        minuteTrackerStorage.update(updatedEntry);
-        loadTrackerEntries();
-    };
-
-    const getMemberName = (memberId: string): string => {
-        const member = members.find(m => m.id === memberId);
-        return member ? member.name : 'Unknown Member';
     };
 
     const getTaskCount = (entry: MinuteTrackerEntry): number => {
@@ -328,6 +376,16 @@ const MinuteTracker = () => {
             default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
         }
     };
+
+    if (loading) {
+        return (
+            <Layout>
+                <div className="flex justify-center items-center min-h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout className="bg-gradient-to-br from-transparent via-green-50 to-transparent dark:from-gray-900 dark:via-slate-900 dark:to-indigo-900">
@@ -639,7 +697,7 @@ const MinuteTracker = () => {
                     </CardContent>
                 </Card>
 
-                {/* Enhanced Tracker Entries */}
+                {/*Tracker Entries */}
                 <div className="space-y-6">
                     {filteredEntries.length === 0 ? (
                         <Card>
@@ -693,9 +751,9 @@ const MinuteTracker = () => {
                                                     <Card key={member.id} className="p-4">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                                <span className="text-white font-semibold text-sm">
-                                  {member.name.charAt(0).toUpperCase()}
-                                </span>
+                                                                <span className="text-white font-semibold text-sm">
+                                                                  {member.name.charAt(0).toUpperCase()}
+                                                                </span>
                                                             </div>
                                                             <div>
                                                                 <p className="font-medium">{member.name}</p>
@@ -727,8 +785,8 @@ const MinuteTracker = () => {
                                                         </Badge>
                                                     </div>
                                                     <span className="text-sm text-gray-600 dark:text-gray-300">
-                            {getTaskCount(entry)} tasks completed
-                          </span>
+                                                        {getTaskCount(entry)} tasks completed
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>
@@ -764,9 +822,9 @@ const MinuteTracker = () => {
                                             {entry.members.slice(0, 3).map((memberId) => (
                                                 <div key={memberId} className="flex items-center gap-3">
                                                     <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-white font-semibold text-xs">
-                              {getMemberName(memberId).charAt(0).toUpperCase()}
-                            </span>
+                                                        <span className="text-white font-semibold text-xs">
+                                                          {getMemberName(memberId).charAt(0).toUpperCase()}
+                                                        </span>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -790,8 +848,8 @@ const MinuteTracker = () => {
                                             <div className="flex items-center gap-2">
                                                 <CheckCircle className="h-4 w-4 text-green-500" />
                                                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                          {getTaskCount(entry)} tasks
-                        </span>
+                                                  {getTaskCount(entry)} tasks
+                                                </span>
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <Button
@@ -836,14 +894,14 @@ const MinuteTracker = () => {
                                                 <span>Tracking {entry.members.length} member{entry.members.length !== 1 ? 's' : ''}</span>
                                                 {entry.estimatedMinutes && (
                                                     <span className="flex items-center gap-1">
-                            <Timer className="h-3 w-3" />
+                                                        <Timer className="h-3 w-3" />
                                                         {Math.floor(entry.estimatedMinutes / 60)}h {entry.estimatedMinutes % 60}m estimated
-                          </span>
+                                                    </span>
                                                 )}
                                                 <span className="flex items-center gap-1">
-                          <Target className="h-3 w-3" />
+                                                    <Target className="h-3 w-3" />
                                                     {getTaskCount(entry)} tasks completed
-                        </span>
+                                                </span>
                                             </CardDescription>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -901,9 +959,9 @@ const MinuteTracker = () => {
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="flex items-center">
                                                                 <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                                    <span className="text-white font-semibold text-sm">
-                                      {getMemberName(memberId).charAt(0).toUpperCase()}
-                                    </span>
+                                                                    <span className="text-white font-semibold text-sm">
+                                                                      {getMemberName(memberId).charAt(0).toUpperCase()}
+                                                                    </span>
                                                                 </div>
                                                                 <div className="ml-4">
                                                                     <div className="text-sm font-medium text-gray-900 dark:text-white">
@@ -922,7 +980,24 @@ const MinuteTracker = () => {
                                                                         <div className="flex-1">
                                                                             <Textarea
                                                                                 value={task}
-                                                                                onChange={(e) => handleUpdateTask(entry.id, memberId, index, e.target.value)}
+                                                                                onChange={(e) => {
+                                                                                    // Update local state immediately
+                                                                                    const updatedEntries = [...trackerEntries];
+                                                                                    const entryIndex = updatedEntries.findIndex(e => e.id === entry.id);
+                                                                                    if (entryIndex !== -1) {
+                                                                                        const updatedTasks = { ...updatedEntries[entryIndex].tasks };
+                                                                                        updatedTasks[memberId] = [...(updatedTasks[memberId] || [])];
+                                                                                        updatedTasks[memberId][index] = e.target.value;
+                                                                                        updatedEntries[entryIndex] = {
+                                                                                            ...updatedEntries[entryIndex],
+                                                                                            tasks: updatedTasks
+                                                                                        };
+                                                                                        setTrackerEntries(updatedEntries);
+                                                                                    }
+
+                                                                                    // Call the handler for potential auto-save
+                                                                                    handleUpdateTask(entry.id, memberId, index, e.target.value);
+                                                                                }}
                                                                                 placeholder="Enter completed task..."
                                                                                 className="min-h-[60px] resize-none text-sm"
                                                                                 rows={2}
@@ -936,6 +1011,14 @@ const MinuteTracker = () => {
                                                                             disabled={memberTasks.length <= 1}
                                                                         >
                                                                             <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                        <Button
+                                                                            onClick={() => handleUpdateTask(entry.id, memberId, index, task)}
+                                                                            size="sm"
+                                                                            variant="outline"
+                                                                            className="ml-2"
+                                                                        >
+                                                                            <Save className="h-4 w-4" />
                                                                         </Button>
                                                                     </div>
                                                                 ))}
@@ -955,8 +1038,8 @@ const MinuteTracker = () => {
                                                                     ></div>
                                                                 </div>
                                                                 <span className="text-xs text-gray-600 dark:text-gray-300 min-w-[3rem]">
-                                    {completionRate}%
-                                  </span>
+                                                                    {completionRate}%
+                                                                </span>
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">

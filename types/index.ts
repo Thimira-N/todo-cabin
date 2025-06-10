@@ -15,6 +15,7 @@ export interface Member {
 export interface RegistryEntry {
     id: string;
     memberId: string;
+    memberName: string;
     date: string;
     markIn?: string;
     markOut?: string;
@@ -37,10 +38,10 @@ export interface MinuteTrackerEntry {
     date: string;
     members: string[];
     tasks: { [memberId: string]: string[] };
-    priority: any;//instead of any here it can use 'never'
-    estimatedMinutes: any;
-    userId: string;
+    priority: 'low' | 'medium' | 'high';
+    estimatedMinutes: number;
     createdAt: Date;
+    userId: string;
 }
 
 export interface AuthContextType {
