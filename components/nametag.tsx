@@ -52,7 +52,7 @@ export const NameTag = ({ collapsed = false }: { collapsed?: boolean }) => {
             {/* Social links */}
             <div className="flex items-center gap-2 justify-center">
                 <a
-                    href="https://wa.me/+94716337787?text=Hello%20Thimira!"
+                    href="https://wa.me/+94716337787?text=Hello%20Thimira!%20%20I'm%20from%20ToDo%20Cabin."
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group/social w-7 h-7 bg-accent hover:bg-accent/80 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
