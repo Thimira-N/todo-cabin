@@ -1,17 +1,31 @@
 import { db } from './firebase';
 import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 
-// Helper to convert Firestore data to proper types
-const convertDates = (data: any) => {
-    if (!data) return data;
+// Helper type for objects that might contain date fields
+type FirestoreData = {
+    [key: string]: unknown;
+    createdAt?: unknown;
+    updatedAt?: unknown;
+    date?: unknown;
+    dueDate?: unknown;
+};
 
-    const result = { ...data };
-    for (const key in result) {
+// Helper to convert Firestore data to proper types
+const convertDates = <T extends FirestoreData>(data: T): T => {
+    if (!data || typeof data !== 'object') return data;
+
+    const result = { ...data as Record<string, unknown> };
+
+    Object.keys(result).forEach(key => {
         if (key.endsWith('At') || key === 'date' || key === 'dueDate') {
-            result[key] = new Date(result[key]);
+            if (typeof result[key] === 'string') {
+                result[key] = new Date(result[key] as string);
+            }
+            // Keep as is if it's already a Date or undefined
         }
-    }
-    return result;
+    });
+
+    return result as T;
 };
 
 export const firestore = {
