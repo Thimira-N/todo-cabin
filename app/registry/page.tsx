@@ -14,6 +14,17 @@ import { UserPlus, Clock, LogIn, LogOut, Trash2, Users, Calendar, Activity, Tren
 import { format } from 'date-fns';
 import { memberService } from '@/lib/firestore/members';
 import { registryService } from '@/lib/firestore/registry';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {cn} from "@/lib/utils";
 
 const Registry = () => {
     const { user } = useAuth();
@@ -23,6 +34,8 @@ const Registry = () => {
     const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [isAddingMember, setIsAddingMember] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
 
     const loadMembers = useCallback(async (): Promise<void> => {
         if (user) {
@@ -184,7 +197,7 @@ const Registry = () => {
         if (!registryEntries.length) {
             return { present: 0, checkedOut: 0, total: members.length };
         }
-        
+
         // Convert selectedDate to Date object for comparison
         const selectedDateObj = new Date(selectedDate);
 
@@ -477,14 +490,56 @@ const Registry = () => {
                                                             <span className="hidden xs:inline">Mark Out</span>
                                                             <span className="xs:hidden">Out</span>
                                                         </Button>
-                                                        <Button
-                                                            onClick={() => handleDeleteMember(member.id)}
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 border-2 border-red-200 hover:border-red-300 rounded-lg sm:rounded-2xl p-2 sm:p-2.5 lg:p-3 transition-all duration-300 h-9 sm:h-10 lg:h-11"
-                                                        >
-                                                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                                                        </Button>
+                                                        <>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    setMemberToDelete(member.id);
+                                                                    setDeleteConfirmOpen(true);
+                                                                }}
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 border-2 border-red-200 hover:border-red-300 rounded-lg sm:rounded-2xl p-2 sm:p-2.5 lg:p-3 transition-all duration-300 h-9 sm:h-10 lg:h-11"
+                                                            >
+                                                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                                            </Button>
+
+                                                            <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                                                                <AlertDialogContent className={cn(
+                                                                    "z-50 transition-all duration-300 ease-in-out",
+                                                                    "border border-border/40 backdrop-blur-lg supports-[backdrop-filter]:bg-background/20",
+                                                                    // "bg-gradient-to-r from-blue-200/80 to-purple-200/80",
+                                                                )}>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle className="font-extrabold text-xl bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent dark:text-white/70">
+                                                                            Delete Member?
+                                                                        </AlertDialogTitle>
+                                                                        <AlertDialogDescription className="font-semibold text-gray-800 dark:text-gray-400 sm:text-base">
+                                                                            This will permanently delete{' '}
+                                                                            <span className="font-extrabold text-gray-900 dark:text-white">
+                                                                                {members.find(m => m.id === memberToDelete)?.name}
+                                                                            </span>{' '}
+                                                                            and all their attendance records. This action cannot be undone.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter className="mt-4 sm:mt-6">
+                                                                        <AlertDialogCancel className="h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 px-3 sm:px-4 text-sm sm:text-base">
+                                                                            Cancel
+                                                                        </AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            className="h-10 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-sm sm:text-base"
+                                                                            onClick={() => {
+                                                                                if (memberToDelete) {
+                                                                                    handleDeleteMember(memberToDelete);
+                                                                                }
+                                                                                setDeleteConfirmOpen(false);
+                                                                            }}
+                                                                        >
+                                                                            Delete
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </>
                                                     </div>
                                                 </div>
                                             </CardContent>
