@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b3f2671d-c9d5-4708-8df4-31a4ff3451a5" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/hooks/use-media-query.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/Header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/Header.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/minute-tracker/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/minute-tracker/page.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,7 +70,7 @@
       <workItem from="1749450261341" duration="29614000" />
       <workItem from="1749531527931" duration="31147000" />
       <workItem from="1749623721319" duration="216000" />
-      <workItem from="1749624349890" duration="14110000" />
+      <workItem from="1749624349890" duration="14868000" />
     </task>
     <servers />
   </component>
