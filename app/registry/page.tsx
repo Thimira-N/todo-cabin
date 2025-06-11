@@ -181,7 +181,21 @@ const Registry = () => {
     };
 
     const getAttendanceStats = () => {
-        const todayEntries = registryEntries.filter(entry => entry.date === selectedDate);
+        if (!registryEntries.length) {
+            return { present: 0, checkedOut: 0, total: members.length };
+        }
+        
+        // Convert selectedDate to Date object for comparison
+        const selectedDateObj = new Date(selectedDate);
+
+        const todayEntries = registryEntries.filter(entry => {
+            const entryDate = new Date(entry.date);
+            return (
+                entryDate.getFullYear() === selectedDateObj.getFullYear() &&
+                entryDate.getMonth() === selectedDateObj.getMonth() &&
+                entryDate.getDate() === selectedDateObj.getDate()
+            );
+        });
         const present = todayEntries.filter(entry => entry.markIn).length;
         const checkedOut = todayEntries.filter(entry => entry.markOut).length;
 
