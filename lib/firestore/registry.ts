@@ -75,23 +75,13 @@ export const registryService = {
     },
 
     getEntriesForDate: async (date: string, userId: string): Promise<RegistryEntry[]> => {
-        // const cacheKey = `${userId}-${date}`;
-
-        // Check cache first
-        const cachedEntries = Array.from(cache.values()).filter(
-            entry => entry.userId === userId && entry.date === date
-        );
-
-        if (cachedEntries.length > 0) {
-            return cachedEntries;
-        }
-
         try {
             const entries = await firestore.getWhere<RegistryEntry>(
                 'registry',
                 ['userId', 'date'],
                 [userId, date]
             );
+            // Update cache with new entries
             entries.forEach(entry => cache.set(entry.id, entry));
             return entries;
         } catch (error) {
@@ -167,6 +157,30 @@ export const registryService = {
         } catch (error) {
             console.error('Error marking out:', error);
             throw new Error('Failed to mark out');
+        }
+    },
+
+    deleteAllForMember: async (memberId: string, userId: string): Promise<void> => {
+        try {
+            // Get all entries for this member
+            const entries = await firestore.getWhere<RegistryEntry>(
+                'registry',
+                ['userId', 'memberId'],
+                [userId, memberId]
+            );
+
+            // Delete each entry
+            const deletePromises = entries.map(entry =>
+                firestore.delete('registry', entry.id)
+            );
+
+            await Promise.all(deletePromises);
+
+            // Clear cache for these entries
+            entries.forEach(entry => cache.delete(entry.id));
+        } catch (error) {
+            console.error('Error deleting registry entries for member:', error);
+            throw new Error('Failed to delete registry entries for member');
         }
     },
 

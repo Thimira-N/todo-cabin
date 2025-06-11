@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge';
 import { Member, RegistryEntry } from '@/types';
 import { UserPlus, Clock, LogIn, LogOut, Trash2, Users, Calendar, Activity, TrendingUp } from 'lucide-react';
-import { format, isToday } from 'date-fns';
+import { format } from 'date-fns';
 import { memberService } from '@/lib/firestore/members';
 import { registryService } from '@/lib/firestore/registry';
 
@@ -22,111 +22,49 @@ const Registry = () => {
     const [newMemberName, setNewMemberName] = useState('');
     const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [isAddingMember, setIsAddingMember] = useState(false);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
-    const [entriesLoading, setEntriesLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    // Combined loading state
-    const loading = isInitialLoad || entriesLoading;
-
-    const loadMembers = useCallback(async (): Promise<Member[]> => {
-        if (!user?.id) return [];
-        try {
-            return await memberService.getAll(user.id);
-        } catch (error) {
-            console.error('Failed to load members:', error);
-            return [];
+    const loadMembers = useCallback(async (): Promise<void> => {
+        if (user) {
+            try {
+                const userMembers = await memberService.getAll(user.id);
+                setMembers(userMembers);
+            } catch (error) {
+                console.error('Failed to load members:', error);
+            }
         }
     }, [user]);
 
-    const loadRegistryEntries = useCallback(async (): Promise<RegistryEntry[]> => {
-        if (!user?.id) return [];
-        setEntriesLoading(true);
-        try {
-            const entries = await registryService.getEntriesForDate(selectedDate, user.id);
-            return entries || [];
-        } catch (error) {
-            console.error('Failed to load registry entries:', error);
-            return [];
-        } finally {
-            setEntriesLoading(false);
-        }
-    }, [user?.id, selectedDate]);
-
-    // useEffect(() => {
-    //     if (user?.id) {
-    //         setLoading(true);
-    //         const loadData = async () => {
-    //             try {
-    //                 await loadMembers();
-    //                 await loadRegistryEntries();
-    //             } catch (error) {
-    //                 console.error('Failed to load data:', error);
-    //             } finally {
-    //                 setLoading(false);
-    //             }
-    //         };
-    //         loadData();
-    //     }
-    // }, [user?.id, selectedDate, loadMembers, loadRegistryEntries]);
-
-
-    // Main data loading effect
-    useEffect(() => {
-        if (!user?.id) return;
-
-        const loadAllData = async () => {
+    const loadRegistryEntries = useCallback(async (): Promise<void> => {
+        if (user) {
             try {
-                setIsInitialLoad(true);
-
-                // Load members first
-                const loadedMembers = await loadMembers();
-                setMembers(loadedMembers);
-
-                // Then load registry entries with the members available
-                const loadedEntries = await loadRegistryEntries();
-                setRegistryEntries(loadedEntries);
-
+                const entries = await registryService.getEntriesForDate(selectedDate, user.id);
+                setRegistryEntries(entries);
             } catch (error) {
-                console.error('Failed to load data:', error);
+                console.error('Failed to load registry entries:', error);
             } finally {
-                setIsInitialLoad(false);
+                setLoading(false);
             }
-        };
+        }
+    }, [user, selectedDate]); // Add selectedDate to dependencies
 
-        loadAllData();
-    }, [user?.id, loadMembers, loadRegistryEntries]);
-
-    // Effect for date changes
     useEffect(() => {
-        if (!user?.id || isInitialLoad) return;
+        if (user) {
+            loadMembers();
+            loadRegistryEntries();
+        }
+    }, [user, loadMembers, loadRegistryEntries]);
 
-        const loadEntriesForNewDate = async () => {
-            const loadedEntries = await loadRegistryEntries();
-            setRegistryEntries(loadedEntries);
-        };
-
-        loadEntriesForNewDate();
-    }, [selectedDate]);
-
-
-
-    // useEffect(() => {
-    //     if (user?.id && !loading) {
-    //         loadRegistryEntries();
-    //     }
-    // }, [selectedDate]); // Only depend on selectedDate
-
-    // useEffect(() => {
-    //     if (user?.id) {
-    //         loadMembers();
-    //         loadRegistryEntries();
-    //     }
-    // }, [user?.id, selectedDate]); // key: depend on user?.id directly
-
+    // Added effect to reload entries when date changes
+    useEffect(() => {
+        if (user) {
+            loadRegistryEntries();
+        }
+    }, [selectedDate, user, loadRegistryEntries]);
 
     const handleAddMember = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user?.id || !newMemberName.trim()) return;
+        if (!user || !newMemberName.trim()) return;
 
         try {
             await memberService.add(newMemberName.trim(), user.id);
@@ -139,9 +77,15 @@ const Registry = () => {
     };
 
     const handleDeleteMember = async (memberId: string) => {
-        if (!user?.id) return;
+        if (!user) return;
         try {
+            // First delete all registry entries for this member
+            await registryService.deleteAllForMember(memberId, user.id);
+
+            // Then delete the member itself
             await memberService.delete(memberId);
+
+            //refresh both lists
             await loadMembers();
             await loadRegistryEntries();
         } catch (error) {
@@ -150,92 +94,90 @@ const Registry = () => {
     };
 
     const handleMarkIn = async (memberId: string) => {
-        if (!user?.id) return;
+        if (!user) return;
 
         try {
             const member = members.find(m => m.id === memberId);
             if (!member) return;
 
-            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const entryId = `${selectedDate}-${memberId}`;
-
-            // Check if there's an existing entry in the database first
-            const existingDbEntry = await registryService.getByDateAndMember(selectedDate, memberId, user.id);
-
-            // Use existing markIn if available, otherwise use current time
-            const markInTime = existingDbEntry?.markIn || currentTime;
-
-            const newEntry: RegistryEntry = {
-                id: entryId,
+            await registryService.markIn(
+                selectedDate,
                 memberId,
-                memberName: member.name,
-                date: selectedDate,
-                markIn: markInTime,
-                markOut: existingDbEntry?.markOut || '',
-                userId: user.id
-            };
-
-            // Optimistic update
-            setRegistryEntries(prev => {
-                const otherEntries = prev.filter(e => e.id !== entryId);
-                return [...otherEntries, newEntry];
-            });
-
-            // Database update
-            await registryService.markIn(selectedDate, memberId, user.id, member.name, markInTime);
+                user.id,
+                member.name
+            );
+            // Reload entries to get the updated data
+            await loadRegistryEntries();
         } catch (error) {
             console.error('Failed to mark in:', error);
-            loadRegistryEntries();
         }
     };
 
-// handleMarkOut
     const handleMarkOut = async (memberId: string) => {
-        if (!user?.id) return;
+        if (!user) return;
 
         try {
             const member = members.find(m => m.id === memberId);
             if (!member) return;
 
-            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const entryId = `${selectedDate}-${memberId}`;
-
-            // Check if there's an existing entry in the database first
-            const existingDbEntry = await registryService.getByDateAndMember(selectedDate, memberId, user.id);
-
-            // Preserve existing markIn
-            const markInTime = existingDbEntry?.markIn || currentTime;
-
-            const newEntry: RegistryEntry = {
-                id: entryId,
+            await registryService.markOut(
+                selectedDate,
                 memberId,
-                memberName: member.name,
-                date: selectedDate,
-                markIn: markInTime,
-                markOut: currentTime,
-                userId: user.id
-            };
-
-            // Optimistic update
-            setRegistryEntries(prev => {
-                const otherEntries = prev.filter(e => e.id !== entryId);
-                return [...otherEntries, newEntry];
-            });
-
-            // Database update
-            await registryService.markOut(selectedDate, memberId, user.id, member.name);
+                user.id,
+                member.name
+            );
+            // Reload entries to get the updated data
+            await loadRegistryEntries();
         } catch (error) {
             console.error('Failed to mark out:', error);
-            loadRegistryEntries();
         }
     };
 
     const getEntryForMember = (memberId: string): RegistryEntry | undefined => {
-        // Only return undefined if we're still loading
-        if (loading) return undefined;
         return registryEntries.find(entry =>
-            entry.memberId === memberId && entry.date === selectedDate
+            entry.memberId === memberId
         );
+    };
+
+    // Helper function to get button states
+    const getButtonStates = (entry: RegistryEntry | undefined) => {
+        if (!entry) {
+            // No entry exists - both buttons enabled
+            return {
+                canMarkIn: true,
+                canMarkOut: false,
+                markInDisabled: false,
+                markOutDisabled: true
+            };
+        }
+
+        if (entry.markIn && !entry.markOut) {
+            // Marked in but not out - disable mark in, enable mark out
+            return {
+                canMarkIn: false,
+                canMarkOut: true,
+                markInDisabled: true,
+                markOutDisabled: false
+            };
+        }
+
+        if (entry.markIn && entry.markOut) {
+            // Both marked in and out - disable both buttons
+            return {
+                canMarkIn: false,
+                canMarkOut: false,
+                markInDisabled: true,
+                markOutDisabled: true
+            };
+        }
+
+        // Default case (shouldn't happen but safe fallback)
+        return {
+            canMarkIn: true,
+            canMarkOut: false,
+            markInDisabled: false,
+            markOutDisabled: true
+        };
     };
 
     const getAttendanceStats = () => {
@@ -246,13 +188,23 @@ const Registry = () => {
         return { present, checkedOut, total: members.length };
     };
 
-    const isCurrentDay = isToday(new Date(selectedDate));
     const stats = getAttendanceStats();
+
+    const isToday = (dateString: string): boolean => {
+        const today = new Date();
+        const selectedDate = new Date(dateString);
+
+        return (
+            selectedDate.getDate() === today.getDate() &&
+            selectedDate.getMonth() === today.getMonth() &&
+            selectedDate.getFullYear() === today.getFullYear()
+        );
+    };
 
     if (loading) {
         return (
             <Layout>
-                <div className="flex justify-center items-center min-h-screen">
+                <div className="flex items-center justify-center min-h-screen">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
             </Layout>
@@ -403,6 +355,11 @@ const Registry = () => {
                                     <span className="text-blue-700 dark:text-blue-300 font-semibold text-sm sm:text-base truncate">
                                         <span className="hidden sm:inline">Viewing: </span>
                                         {format(new Date(selectedDate), 'EEE, MMM d, yyyy')}
+                                        {!isToday(selectedDate) && (
+                                            <Badge variant="secondary" className="ml-2">
+                                                {new Date(selectedDate) > new Date() ? 'Future Date' : 'Past Date'}
+                                            </Badge>
+                                        )}
                                     </span>
                                 </div>
                             </div>
@@ -436,6 +393,7 @@ const Registry = () => {
                             <div className="grid gap-3 sm:gap-4 lg:gap-6">
                                 {members.map((member, index) => {
                                     const entry = getEntryForMember(member.id);
+                                    const buttonStates = getButtonStates(entry);
                                     const gradients = [
                                         'from-blue-500 to-cyan-500',
                                         'from-purple-500 to-pink-500',
@@ -446,19 +404,12 @@ const Registry = () => {
                                     ];
                                     const gradientClass = gradients[index % gradients.length];
 
-                                    // Determine button states
-                                    const isMarkedIn = !entriesLoading && !!entry?.markIn;
-                                    const isMarkedOut = !entriesLoading && !!entry?.markOut;
-                                    // const canMarkIn = !entriesLoading && !isMarkedIn && !isMarkedOut && isCurrentDay;
-                                    // const canMarkOut = !entriesLoading && isMarkedIn && !isMarkedOut && isCurrentDay;
-
                                     return (
                                         <Card key={member.id} className="group border-0 shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-gray-800 hover:scale-[1.01] sm:hover:scale-[1.02]">
                                             <CardContent className="p-4 sm:p-6 lg:p-8">
                                                 <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
                                                     {/* Member info section (left side) */}
                                                     <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 min-w-0 flex-1">
-                                                        {/* Avatar and name section remains the same */}
                                                         <div className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-r ${gradientClass} rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-105 sm:group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
                                                             <span className="text-white font-bold text-lg sm:text-xl lg:text-2xl">
                                                                 {member.name.charAt(0).toUpperCase()}
@@ -469,19 +420,19 @@ const Registry = () => {
                                                                 {member.name}
                                                             </h3>
                                                             <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 sm:gap-3 lg:gap-4">
-                                                                {isMarkedIn && (
+                                                                {entry?.markIn && (
                                                                     <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900/30 dark:to-emerald-900/30 dark:text-green-300 px-2 sm:px-3 py-1 rounded-lg sm:rounded-xl border-0 font-semibold text-xs sm:text-sm">
                                                                         <LogIn className="h-3 w-3 mr-1" />
                                                                         In: {entry.markIn}
                                                                     </Badge>
                                                                 )}
-                                                                {isMarkedOut && (
+                                                                {entry?.markOut && (
                                                                     <Badge className="bg-gradient-to-r from-red-100 to-pink-100 text-red-800 dark:from-red-900/30 dark:to-pink-900/30 dark:text-red-300 px-2 sm:px-3 py-1 rounded-lg sm:rounded-xl border-0 font-semibold text-xs sm:text-sm">
                                                                         <LogOut className="h-3 w-3 mr-1" />
                                                                         Out: {entry.markOut}
                                                                     </Badge>
                                                                 )}
-                                                                {!isMarkedIn && !isMarkedOut && (
+                                                                {!entry?.markIn && (
                                                                     <Badge variant="secondary" className="bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 px-2 sm:px-3 py-1 rounded-lg sm:rounded-xl border-0 text-xs sm:text-sm">
                                                                         Not checked in
                                                                     </Badge>
@@ -492,43 +443,26 @@ const Registry = () => {
 
                                                     {/* Buttons section (right-aligned) */}
                                                     <div className="flex flex-row items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto ml-auto">
-                                                        {isCurrentDay ? (
-                                                            <>
-                                                                <Button
-                                                                    onClick={() => handleMarkIn(member.id)}
-                                                                    size="sm"
-                                                                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg sm:rounded-2xl px-3 sm:px-4 lg:px-6 h-9 sm:h-10 lg:h-11 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm lg:text-base"
-                                                                    disabled={isMarkedIn || isMarkedOut}
-                                                                >
-                                                                    {entriesLoading ? (
-                                                                        <div className="flex items-center">
-                                                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                                            Loading...
-                                                                        </div>
-                                                                    ) : (
-                                                                        <>
-                                                                            <LogIn className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                                                            <span className="hidden xs:inline">Mark In</span>
-                                                                            <span className="xs:hidden">In</span>
-                                                                        </>
-                                                                    )}
-                                                                </Button>
-                                                                <Button
-                                                                    onClick={() => handleMarkOut(member.id)}
-                                                                    size="sm"
-                                                                    className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg sm:rounded-2xl px-3 sm:px-4 lg:px-6 h-9 sm:h-10 lg:h-11 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm lg:text-base"
-                                                                    disabled={!isMarkedIn || isMarkedOut}
-                                                                >
-                                                                    <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                                                    <span className="hidden xs:inline">Mark Out</span>
-                                                                    <span className="xs:hidden">Out</span>
-                                                                </Button>
-                                                            </>
-                                                        ) : (
-                                                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                                {!isMarkedIn && !isMarkedOut ? 'No record' : ''}
-                                                            </div>
-                                                        )}
+                                                        <Button
+                                                            onClick={() => handleMarkIn(member.id)}
+                                                            size="sm"
+                                                            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg sm:rounded-2xl px-3 sm:px-4 lg:px-6 h-9 sm:h-10 lg:h-11 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm lg:text-base"
+                                                            disabled={buttonStates.markInDisabled || !isToday(selectedDate)}
+                                                        >
+                                                            <LogIn className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                                            <span className="hidden xs:inline">Mark In</span>
+                                                            <span className="xs:hidden">In</span>
+                                                        </Button>
+                                                        <Button
+                                                            onClick={() => handleMarkOut(member.id)}
+                                                            size="sm"
+                                                            className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg sm:rounded-2xl px-3 sm:px-4 lg:px-6 h-9 sm:h-10 lg:h-11 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm lg:text-base"
+                                                            disabled={buttonStates.markOutDisabled || !isToday(selectedDate)}
+                                                        >
+                                                            <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                                            <span className="hidden xs:inline">Mark Out</span>
+                                                            <span className="xs:hidden">Out</span>
+                                                        </Button>
                                                         <Button
                                                             onClick={() => handleDeleteMember(member.id)}
                                                             size="sm"

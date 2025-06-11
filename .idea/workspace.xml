@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b3f2671d-c9d5-4708-8df4-31a4ff3451a5" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/components/nametag.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/nametag.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/registry/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/registry/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/firestore/registry.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/firestore/registry.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,7 +70,9 @@
       <workItem from="1749297427668" duration="12072000" />
       <workItem from="1749385627662" duration="16925000" />
       <workItem from="1749450261341" duration="29614000" />
-      <workItem from="1749531527931" duration="28637000" />
+      <workItem from="1749531527931" duration="31147000" />
+      <workItem from="1749623721319" duration="216000" />
+      <workItem from="1749624349890" duration="4137000" />
     </task>
     <servers />
   </component>
