@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from '@/contexts/ThemeContext';
 import {useRouter} from "next/navigation";
 import {useAuth} from "@/contexts/AuthContext";
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface HeaderProps {
     isMobile: boolean;
@@ -20,6 +21,7 @@ export function Header({ sidebarCollapsed, onToggleCollapse }: HeaderProps) {
     const router = useRouter();
     const { logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const isMobile = useMediaQuery('(max-width: 640px)'); // Add this hook
 
     useEffect(() => {
         setMounted(true)
@@ -102,27 +104,42 @@ export function Header({ sidebarCollapsed, onToggleCollapse }: HeaderProps) {
                 <div className="flex-1" />
 
                 {/* Right Section - Theme Toggle Only */}
-                <div className="flex items-center">
-                    {/* Theme Toggle Button */}
-                    <Button
-                        variant="ghost"
-                        className={cn(
-                            'w-50 justify-start gap-3 sm:gap-4 h-10 sm:h-12 transition-all duration-300 rounded-2xl relative overflow-hidden',
-                            'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]'
-                        )}
-                        onClick={toggleTheme}
-                        aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-100/0 to-blue-100/0 hover:from-yellow-100/30 hover:to-blue-100/30 dark:hover:from-yellow-900/20 dark:hover:to-blue-900/20 transition-all duration-300" />
+                <div className="flex items-center gap-2">
+                    {/* Theme Toggle Button - Mobile */}
+                    {isMobile ? (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-10 h-10 rounded-2xl"
+                            onClick={toggleTheme}
+                            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                        >
+                            {theme === 'light' ? (
+                                <Moon className="h-5 w-5" />
+                            ) : (
+                                <Sun className="h-5 w-5" />
+                            )}
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="ghost"
+                            className={cn(
+                                'w-50 justify-start gap-3 sm:gap-4 h-10 sm:h-12 transition-all duration-300 rounded-2xl relative overflow-hidden',
+                                'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]'
+                            )}
+                            onClick={toggleTheme}
+                            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-yellow-100/0 to-blue-100/0 hover:from-yellow-100/30 hover:to-blue-100/30 dark:hover:from-yellow-900/20 dark:hover:to-blue-900/20 transition-all duration-300" />
 
-                        <div className="relative flex items-center gap-3 sm:gap-4 w-full min-w-0">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-blue-500 dark:to-purple-600 flex items-center justify-center shadow-lg transition-all duration-300 flex-shrink-0">
-                                {theme === 'light' ? (
-                                    <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                ) : (
-                                    <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                )}
-                            </div>
+                            <div className="relative flex items-center gap-3 sm:gap-4 w-full min-w-0">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-blue-500 dark:to-purple-600 flex items-center justify-center shadow-lg transition-all duration-300 flex-shrink-0">
+                                    {theme === 'light' ? (
+                                        <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                                    ) : (
+                                        <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                                    )}
+                                </div>
                                 <div className="flex-1 text-left min-w-0">
                                     <div className="font-semibold text-sm text-gray-700 dark:text-gray-300 truncate">
                                         {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
@@ -131,26 +148,38 @@ export function Header({ sidebarCollapsed, onToggleCollapse }: HeaderProps) {
                                         Switch theme
                                     </div>
                                 </div>
-                        </div>
-                    </Button>
-
-                    {/* Logout Button */}
-                    <Button
-                        variant="ghost"
-                        className={cn(
-                            'w-50 justify-start gap-3 sm:gap-4 h-10 sm:h-12 transition-all duration-300 rounded-2xl relative overflow-hidden',
-                            'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]',
-                            'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300'
-                        )}
-                        onClick={handleLogout}
-                        aria-label="Sign out"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-red-50/0 to-pink-50/0 hover:from-red-50/50 hover:to-pink-50/50 dark:hover:from-red-900/20 dark:hover:to-pink-900/20 transition-all duration-300" />
-
-                        <div className="relative flex items-center gap-3 sm:gap-4 w-full min-w-0">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 flex items-center justify-center shadow-lg transition-all duration-300 flex-shrink-0">
-                                <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                             </div>
+                        </Button>
+                    )}
+
+                    {/* Logout Button - Mobile */}
+                    {isMobile ? (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-10 h-10 rounded-2xl text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                            onClick={handleLogout}
+                            aria-label="Sign out"
+                        >
+                            <LogOut className="h-5 w-5" />
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="ghost"
+                            className={cn(
+                                'w-50 justify-start gap-3 sm:gap-4 h-10 sm:h-12 transition-all duration-300 rounded-2xl relative overflow-hidden',
+                                'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]',
+                                'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300'
+                            )}
+                            onClick={handleLogout}
+                            aria-label="Sign out"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-red-50/0 to-pink-50/0 hover:from-red-50/50 hover:to-pink-50/50 dark:hover:from-red-900/20 dark:hover:to-pink-900/20 transition-all duration-300" />
+
+                            <div className="relative flex items-center gap-3 sm:gap-4 w-full min-w-0">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 flex items-center justify-center shadow-lg transition-all duration-300 flex-shrink-0">
+                                    <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                                </div>
                                 <div className="flex-1 text-left min-w-0">
                                     <div className="font-semibold text-sm truncate">
                                         Sign Out
@@ -159,9 +188,9 @@ export function Header({ sidebarCollapsed, onToggleCollapse }: HeaderProps) {
                                         End session
                                     </div>
                                 </div>
-                        </div>
-                    </Button>
-
+                            </div>
+                        </Button>
+                    )}
                 </div>
             </div>
 
