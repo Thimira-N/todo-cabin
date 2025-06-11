@@ -26,9 +26,9 @@ export default function LoginPage() {
                 transition={{ duration: 0.5 }}
                 className="absolute inset-0 flex items-center justify-center"
             >
-                <div className="absolute -left-20 -top-20 w-72 h-72 bg-purple-500 dark:bg-purple-700 rounded-full mix-blend-multiply filter blur-3xl opacity-30 dark:opacity-20 animate-blob"></div>
-                <div className="absolute right-0 -bottom-20 w-72 h-72 bg-blue-500 dark:bg-blue-700 rounded-full mix-blend-multiply filter blur-3xl opacity-30 dark:opacity-20 animate-blob animation-delay-2000"></div>
-                <div className="absolute -right-20 top-1/3 w-72 h-72 bg-pink-200 dark:bg-pink-700 rounded-full mix-blend-multiply filter blur-3xl opacity-30 dark:opacity-20 animate-blob animation-delay-4000"></div>
+                <div className="absolute -left-20 -top-20 w-72 h-72 bg-purple-500 dark:bg-purple-700 rounded-full mix-blend-multiply filter blur-3xl opacity-30 dark:opacity-60 animate-blob"></div>
+                <div className="absolute right-0 -bottom-20 w-72 h-72 bg-blue-500 dark:bg-blue-700 rounded-full mix-blend-multiply filter blur-3xl opacity-30 dark:opacity-60 animate-blob animation-delay-2000"></div>
+                <div className="absolute -right-20 top-1/3 w-72 h-72 bg-pink-200 dark:bg-pink-700 rounded-full mix-blend-multiply filter blur-3xl opacity-30 dark:opacity-60 animate-blob animation-delay-4000"></div>
             </motion.div>
 
             <div className="w-full max-w-md z-10">
@@ -60,7 +60,7 @@ export default function LoginPage() {
                             <div className="absolute inset-0"></div>
                             <div className="relative z-10">
                                 <motion.div
-                                    initial={{ scale: 0.9 }}
+                                    initial={{ scale: 0.5 }}
                                     animate={{ scale: 1 }}
                                     transition={{ type: 'spring', stiffness: 200, damping: 10 }}
                                     className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg"

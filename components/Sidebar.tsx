@@ -341,9 +341,12 @@ export default function Sidebar({
                             </div>
                         )}
                     </div>
-                    <div className="p-3 sm:p-4 border-t border-gray-200/60 dark:border-gray-700/60 space-y-2 sm:space-y-3 overflow-hidden">
-                        <NameTag />
-                    </div>
+
+                    {shouldShowContent && (
+                        <div className="p-3 sm:p-4 border-t border-gray-200/60 dark:border-gray-700/60 space-y-2 sm:space-y-3 overflow-hidden">
+                            <NameTag />
+                        </div>
+                    )}
                 </div>
             </div>
 

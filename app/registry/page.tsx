@@ -46,7 +46,7 @@ const Registry = () => {
                 setLoading(false);
             }
         }
-    }, [user, selectedDate]); // Add selectedDate to dependencies
+    }, [user, selectedDate]);
 
     useEffect(() => {
         if (user) {
