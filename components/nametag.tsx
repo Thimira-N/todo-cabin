@@ -62,7 +62,7 @@ export const NameTag = ({ collapsed = false }: { collapsed?: boolean }) => {
                 </a>
 
                 <a
-                    href="https://github.com/Thimira-N"
+                    href="https://github.com"
                     className="group/social w-7 h-7 bg-accent hover:bg-accent/80 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
                     aria-label="GitHub"
                 >
