@@ -19,6 +19,7 @@ import { format, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMo
 import * as XLSX from 'xlsx';
 import { memberService } from '@/lib/firestore/members';
 import { minuteTrackerService } from '@/lib/firestore/minuteTracker';
+import {LoadingScreen} from "@/components/loadingScreen";
 
 type FilterPeriod = 'all' | 'today' | 'week' | 'month' | 'custom';
 type ViewMode = 'list' | 'grid' | 'summary';
@@ -380,9 +381,11 @@ const MinuteTracker = () => {
     if (loading) {
         return (
             <Layout>
-                <div className="flex justify-center items-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
+                {/*<div className="flex justify-center items-center min-h-screen">*/}
+                {/*    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>*/}
+                {/*</div>*/}
+
+                <LoadingScreen />
             </Layout>
         );
     }

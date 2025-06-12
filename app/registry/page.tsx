@@ -25,6 +25,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {cn} from "@/lib/utils";
+import {LoadingScreen} from "@/components/loadingScreen";
 
 const Registry = () => {
     const { user } = useAuth();
@@ -231,9 +232,11 @@ const Registry = () => {
     if (loading) {
         return (
             <Layout>
-                <div className="flex items-center justify-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
+                {/*<div className="flex items-center justify-center min-h-screen">*/}
+                {/*    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>*/}
+                {/*</div>*/}
+
+                <LoadingScreen />
             </Layout>
         );
     }
