@@ -16,6 +16,17 @@ import { TodoItem } from '@/types';
 import { Plus, Calendar, Filter, Check, Trash2, Edit3, CheckSquare } from 'lucide-react';
 import { format, isAfter, isBefore, isToday, parseISO } from 'date-fns';
 import { todoService } from '@/lib/firestore/todos';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {cn} from "@/lib/utils";
 
 const ToDo = () => {
     const { user } = useAuth();
@@ -27,6 +38,8 @@ const ToDo = () => {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterPriority, setFilterPriority] = useState<string>('all');
     const [loading, setLoading] = useState(true);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [todoToDelete, setTodoToDelete] = useState<TodoItem | null>(null);
 
     const [newTodo, setNewTodo] = useState({
         title: '',
@@ -183,6 +196,11 @@ const ToDo = () => {
 
     const getCompletedCount = () => todos.filter(todo => todo.completed).length;
     const getTotalCount = () => todos.length;
+
+    const handleDeleteClick = (todo: TodoItem) => {
+        setTodoToDelete(todo); // Track which todo is being deleted
+        setShowDeleteDialog(true);
+    };
 
     if (loading) {
         return (
@@ -472,14 +490,51 @@ const ToDo = () => {
                                                     >
                                                         <Edit3 className="h-4 w-4" />
                                                     </Button>
-                                                    <Button
-                                                        onClick={() => handleDeleteTodo(todo.id)}
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+
+                                                    <>
+                                                        <Button
+                                                            onClick={() => handleDeleteClick(todo)}
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+
+                                                        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                                                            <AlertDialogContent className={cn(
+                                                                "z-50 transition-all duration-300 ease-in-out",
+                                                                "border border-border/40 backdrop-blur-lg supports-[backdrop-filter]:bg-background/20",
+                                                                // "bg-gradient-to-r from-blue-200/80 to-purple-200/80",
+                                                            )}>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle className="font-extrabold text-xl bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent dark:text-white/70">
+                                                                        Confirm Delete the Task?
+                                                                    </AlertDialogTitle>
+                                                                    <AlertDialogDescription className="font-semibold text-gray-800 dark:text-gray-400">
+                                                                        This will be deleted this task permanently.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel
+                                                                        onClick={() => setTodoToDelete(null)}
+                                                                    >
+                                                                        Cancel
+                                                                    </AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        onClick={() => {
+                                                                            if (todoToDelete) handleDeleteTodo(todoToDelete.id);
+                                                                            setShowDeleteDialog(false);
+                                                                        }}
+                                                                        className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                                                                    >
+                                                                        Delete
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </>
+
                                                 </div>
                                             </div>
                                         </div>

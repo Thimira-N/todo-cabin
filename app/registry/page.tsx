@@ -510,12 +510,12 @@ const Registry = () => {
                                                                     // "bg-gradient-to-r from-blue-200/80 to-purple-200/80",
                                                                 )}>
                                                                     <AlertDialogHeader>
-                                                                        <AlertDialogTitle className="font-extrabold text-xl bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent dark:text-white/70">
+                                                                        <AlertDialogTitle className="font-extrabold text-xl bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent dark:text-white/70">
                                                                             Delete Member?
                                                                         </AlertDialogTitle>
-                                                                        <AlertDialogDescription className="font-semibold text-gray-800 dark:text-gray-400 sm:text-base">
+                                                                        <AlertDialogDescription className="font-semibold text-gray-300 dark:text-gray-400 sm:text-base">
                                                                             This will permanently delete{' '}
-                                                                            <span className="font-extrabold text-gray-900 dark:text-white">
+                                                                            <span className="font-extrabold text-gray-200 dark:text-white">
                                                                                 {members.find(m => m.id === memberToDelete)?.name}
                                                                             </span>{' '}
                                                                             and all their attendance records. This action cannot be undone.
