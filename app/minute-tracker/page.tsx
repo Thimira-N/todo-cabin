@@ -291,6 +291,108 @@ const MinuteTracker = () => {
         XLSX.writeFile(workbook, `minute-tracker-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     };
 
+    // const handleExportIndividualEntry = (entry: MinuteTrackerEntry) => {
+    //     // Create a new workbook
+    //     const workbook = XLSX.utils.book_new();
+    //
+    //     // Prepare the data for export
+    //     const excelData = Object.entries(entry.tasks).map(([memberId, tasks]) => {
+    //         const memberName = getMemberName(memberId);
+    //         return tasks
+    //             .filter(task => task.trim())
+    //             .map((task, index) => ({
+    //                 'Date': format(new Date(entry.date), 'yyyy-MM-dd'),
+    //                 'Member': memberName,
+    //                 'Priority': entry.priority,
+    //                 'Estimated Minutes': entry.estimatedMinutes,
+    //                 'Task Number': index + 1,
+    //                 'Task Description': task
+    //             }));
+    //     }).flat();
+    //
+    //     // Convert data to worksheet
+    //     const worksheet = XLSX.utils.json_to_sheet(excelData);
+    //
+    //     // Add worksheet to workbook
+    //     XLSX.utils.book_append_sheet(workbook, worksheet, 'Minute Tracker');
+    //
+    //     // Generate Excel file and download
+    //     XLSX.writeFile(workbook, `minute-tracker-${format(new Date(entry.date), 'yyyy-MM-dd')}.xlsx`);
+    // };
+
+    const handleExportIndividualEntry = (entry: MinuteTrackerEntry) => {
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+
+        // Prepare the data for export with additional details
+        const excelData = Object.entries(entry.tasks).map(([memberId, tasks]) => {
+            const memberName = getMemberName(memberId);
+            return tasks
+                .filter(task => task.trim())
+                .map((task, index) => ({
+                    'Date': format(new Date(entry.date), 'yyyy-MM-dd'),
+                    'Member': memberName,
+                    'Priority': entry.priority.toUpperCase(),
+                    'Minutes': entry.estimatedMinutes,
+                    'Task Number': index + 1,
+                    'Task Description': task,
+                    'Status': 'Completed',
+                    'Notes': ''
+                }));
+        }).flat();
+
+        // Add summary row at the beginning
+        const summaryRow = {
+            'Date': 'SUMMARY',
+            'Member': `${entry.members.length} members`,
+            'Priority': '',
+            'Minutes': `Estimated Time Period (minutes) - ${entry.estimatedMinutes}`,
+            'Task Number': excelData.length,
+            'Task Description': `Total tasks for ${format(new Date(entry.date), 'MMMM d, yyyy')}`,
+            'Status': '',
+            'Notes': 'Additional Notes...'
+        };
+
+        // Add header row with styling indicators
+        const headerRow = {
+            'Date': ' 📅 DATE ',
+            'Member': ' 👤 MEMBER ',
+            'Priority': ' ⚠️ PRIORITY ',
+            'Minutes': ' ⏱️ MINUTES ',
+            'Task Number': ' #️⃣ TASK NO ',
+            'Task Description': ' 📝 TASK DESCRIPTION ',
+            'Status': ' ✅ STATUS ',
+            'Notes': ' 📋 NOTES '
+        };
+
+        // Combine all rows
+        const exportData = [headerRow, summaryRow, ...excelData];
+
+        // Convert data to worksheet
+        const worksheet = XLSX.utils.json_to_sheet(exportData, { skipHeader: true });
+
+        // Calculate Excel column widths
+        const colWidths = [
+            { wch: 12 }, // Date
+            { wch: 20 }, // Member
+            { wch: 10 }, // Priority
+            { wch: 10 }, // Minutes
+            { wch: 10 }, // Task Number
+            { wch: 40 }, // Task Description
+            { wch: 12 }, // Status
+            { wch: 30 }  // Notes
+        ];
+        worksheet['!cols'] = colWidths;
+
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Minute Tracker');
+
+        // Generate Excel file and download
+        XLSX.writeFile(workbook,
+            `MinuteTracker_${format(new Date(entry.date), 'yyyy-MM-dd')}_${entry.members.length}Members.xlsx`
+        );
+    };
+
     const handleUpdateTask = async (entryId: string, memberId: string, taskIndex: number, value: string) => {
         // Update local state immediately for responsive UI
         setTrackerEntries(prevEntries =>
@@ -856,6 +958,14 @@ const MinuteTracker = () => {
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <Button
+                                                    onClick={() => handleExportIndividualEntry(entry)}
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                                                >
+                                                    <Download className="h-3 w-3" />
+                                                </Button>
+                                                <Button
                                                     onClick={() => handleDuplicateEntry(entry)}
                                                     size="sm"
                                                     variant="ghost"
@@ -912,6 +1022,15 @@ const MinuteTracker = () => {
                                                 <Users className="h-3 w-3" />
                                                 {entry.members.length}
                                             </Badge>
+                                            <Button
+                                                onClick={() => handleExportIndividualEntry(entry)}
+                                                size="sm"
+                                                variant="outline"
+                                                className="text-green-600 hover:text-green-700"
+                                            >
+                                                <Download className="h-4 w-4 mr-1" />
+                                                Export
+                                            </Button>
                                             <Button
                                                 onClick={() => handleDuplicateEntry(entry)}
                                                 size="sm"
