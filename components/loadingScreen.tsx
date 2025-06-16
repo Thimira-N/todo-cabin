@@ -8,9 +8,9 @@ export const LoadingScreen = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex flex-col items-center justify-center min-h-screen gap-6 bg-gradient-to-br from-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:to-slate-900"
+                className="flex flex-col items-center justify-center min-h-screen gap-6"
             >
-                {/* Logo & App Name */}
+                {/*Logo & App Name*/}
                 <motion.div
                     initial={{ y: -20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -61,7 +61,7 @@ export const LoadingScreen = () => {
                     </p>
                 </motion.div>
 
-                {/* Animated Spinner */}
+                {/*animated spinner*/}
                 <motion.div
                     animate={{
                         rotate: 360,
