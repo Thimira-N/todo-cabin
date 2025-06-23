@@ -321,76 +321,72 @@ const MinuteTracker = () => {
     // };
 
     const handleExportIndividualEntry = (entry: MinuteTrackerEntry) => {
-        // Create a new workbook
         const workbook = XLSX.utils.book_new();
+        const exportData: any[] = [];
 
-        // Prepare the data for export with additional details
-        const excelData = Object.entries(entry.tasks).map(([memberId, tasks]) => {
+        // === SECTION 1: TRACKER DETAILS (TOP) ===
+        exportData.push(
+            { 'Time Tracker Details': 'DATE', '': format(new Date(entry.date), 'MM/dd/yyyy') },
+            { 'Time Tracker Details': 'TOTAL MINUTES', '': entry.estimatedMinutes },
+            { 'Time Tracker Details': 'PRIORITY', '': entry.priority.toLowerCase() },
+            { 'Time Tracker Details': 'CREATED AT', '': format(new Date(entry.createdAt || entry.date), 'MM/dd/yyyy hh:mm a') },
+            { 'Time Tracker Details': 'STATUS', '': 'Completed' },
+            {}, // Spacer
+        );
+
+        // === SECTION 2: TASK BREAKDOWN (GROUPED BY MEMBER) ===
+        exportData.push(
+            { 'DETAILED TASKS': '========== Tasks Description =========', '': '', '': '' }, // Bold section header
+        );
+
+        // Add tasks grouped by member
+        Object.entries(entry.tasks).forEach(([memberId, tasks]) => {
             const memberName = getMemberName(memberId);
-            return tasks
-                .filter(task => task.trim())
-                .map((task, index) => ({
-                    'Date': format(new Date(entry.date), 'yyyy-MM-dd'),
-                    'Member': memberName,
-                    'Priority': entry.priority.toUpperCase(),
-                    'Minutes': entry.estimatedMinutes,
-                    'Task Number': index + 1,
-                    'Task Description': task,
-                    'Status': 'Completed',
-                    'Notes': ''
-                }));
-        }).flat();
+            const memberTasks = tasks.filter(task => task.trim());
 
-        // Add summary row at the beginning
-        const summaryRow = {
-            'Date': 'SUMMARY',
-            'Member': `${entry.members.length} members`,
-            'Priority': '',
-            'Minutes': `Estimated Time Period (minutes) - ${entry.estimatedMinutes}`,
-            'Task Number': excelData.length,
-            'Task Description': `Total tasks for ${format(new Date(entry.date), 'MMMM d, yyyy')}`,
-            'Status': '',
-            'Notes': 'Additional Notes...'
-        };
+            if (memberTasks.length > 0) {
+                // Bold member header
+                exportData.push(
+                    {},
+                    { 'MEMBER': memberName, '': 'Member Name: ' },
+                    { 'Task Description': 'Task(s) Done: ', '': '' }, // Sub-header
+                );
 
-        // Add header row with styling indicators
-        const headerRow = {
-            'Date': ' 📅 DATE ',
-            'Member': ' 👤 MEMBER ',
-            'Priority': ' ⚠️ PRIORITY ',
-            'Minutes': ' ⏱️ MINUTES ',
-            'Task Number': ' #️⃣ TASK NO ',
-            'Task Description': ' 📝 TASK DESCRIPTION ',
-            'Status': ' ✅ STATUS ',
-            'Notes': ' 📋 NOTES '
-        };
+                // Member tasks
+                memberTasks.forEach((task) => {
+                    exportData.push({
+                        'Task Description': task,
+                    });
+                });
+                exportData.push({}); // Spacer
+            }
+        });
 
-        // Combine all rows
-        const exportData = [headerRow, summaryRow, ...excelData];
+        // === SECTION 3: NOTES (BOTTOM) ===
+        exportData.push(
+            { 'NOTES': 'Additional notes or comments...' },
+        );
 
-        // Convert data to worksheet
+        // Convert to worksheet
         const worksheet = XLSX.utils.json_to_sheet(exportData, { skipHeader: true });
 
-        // Calculate Excel column widths
-        const colWidths = [
-            { wch: 12 }, // Date
-            { wch: 20 }, // Member
-            { wch: 10 }, // Priority
-            { wch: 10 }, // Minutes
-            { wch: 10 }, // Task Number
-            { wch: 40 }, // Task Description
+        // Set column widths and styling
+        worksheet['!cols'] = [
+            { wch: 15 }, // Task Description
+            { wch: 12 }, // Minutes
             { wch: 12 }, // Status
-            { wch: 30 }  // Notes
         ];
-        worksheet['!cols'] = colWidths;
 
-        // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Minute Tracker');
+        // Add bold styling and font size to headers
+        const boldStyle = { font: { bold: true, sz: 14 } };
+        const headerRows = [0, 7, 8, exportData.length - 1]; // Rows with ***TEXT***
+        headerRows.forEach(row => {
+            if (worksheet[`A${row + 1}`]) worksheet[`A${row + 1}`].s = boldStyle;
+        });
 
-        // Generate Excel file and download
-        XLSX.writeFile(workbook,
-            `MinuteTracker_${format(new Date(entry.date), 'yyyy-MM-dd')}_${entry.members.length}Members.xlsx`
-        );
+        // Generate and download Excel
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Time Tracker');
+        XLSX.writeFile(workbook, `TimeTracker_${format(new Date(entry.date), 'yyyy-MM-dd')}.xlsx`);
     };
 
     const handleUpdateTask = async (entryId: string, memberId: string, taskIndex: number, value: string) => {
