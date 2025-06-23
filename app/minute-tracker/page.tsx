@@ -320,9 +320,21 @@ const MinuteTracker = () => {
     //     XLSX.writeFile(workbook, `minute-tracker-${format(new Date(entry.date), 'yyyy-MM-dd')}.xlsx`);
     // };
 
+
+    interface ExcelExportRow {
+        'Time Tracker Details'?: string;
+        'Detailed Tasks'?: string;
+        'Task Description'?: string;
+        'Member'?: string | number;
+        'Minutes'?: number;
+        'Status'?: string;
+        'Notes'?: string;
+        ''?: string | number; // For empty cells
+    }
+
     const handleExportIndividualEntry = (entry: MinuteTrackerEntry) => {
         const workbook = XLSX.utils.book_new();
-        const exportData: any[] = [];
+        const exportData: ExcelExportRow[] = []; 
 
         // === SECTION 1: TRACKER DETAILS (TOP) ===
         exportData.push(
