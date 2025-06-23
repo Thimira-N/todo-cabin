@@ -348,7 +348,7 @@ const MinuteTracker = () => {
 
         // === SECTION 2: TASK BREAKDOWN (GROUPED BY MEMBER) ===
         exportData.push(
-            { 'DETAILED TASKS': '========== Tasks Description =========', '': '', '': '' }, // Bold section header
+            { 'Detailed Tasks': '========== Tasks Description =========', '': '', '': '' }, // Bold section header
         );
 
         // Add tasks grouped by member
@@ -360,7 +360,7 @@ const MinuteTracker = () => {
                 // Bold member header
                 exportData.push(
                     {},
-                    { 'MEMBER': memberName, '': 'Member Name: ' },
+                    { 'Member': memberName, '': 'Member Name: ' },
                     { 'Task Description': 'Task(s) Done: ', '': '' }, // Sub-header
                 );
 
@@ -376,7 +376,7 @@ const MinuteTracker = () => {
 
         // === SECTION 3: NOTES (BOTTOM) ===
         exportData.push(
-            { 'NOTES': 'Additional notes or comments...' },
+            { 'Notes': 'Additional notes or comments...' },
         );
 
         // Convert to worksheet
